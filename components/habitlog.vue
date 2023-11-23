@@ -1,3 +1,5 @@
+
+
 <template>
     <div>
         <h2>Today's Habits</h2>
@@ -9,6 +11,8 @@
         </ul>
 
         <button @click="addToHabitLog">Add to habit log</button>
+
+        <h1> Total habits logged: {{ totalHabitsLogged }}</h1>
     </div>
 </template>
 
@@ -18,6 +22,7 @@ import { ref, onMounted } from 'vue';
 const client = useSupabaseClient();
 const habits = ref([]);
 const unloggedHabits = ref([]);
+const totalHabitsLogged = ref(0); // Initialize totalHabitsLogged with 0
 
 const fetchHabits = async () => {
     try {
@@ -33,6 +38,9 @@ const fetchHabits = async () => {
         unloggedHabits.value = allHabits.filter(
             (habit) => !loggedHabits.data.some((log) => log.HABIT_ID === habit.HABIT_ID)
         );
+
+        // Recalculate totalHabitsLogged based on the fetched data
+        totalHabitsLogged.value = loggedHabits.data ? loggedHabits.data.length : 0;
     } catch (error) {
         console.error('Error fetching habits:', error);
     }
@@ -75,8 +83,33 @@ const addHabitToLog = async (habit) => {
         } else {
             console.warn(`Habit with ID ${habit.HABIT_ID} does not exist. Skipping.`);
         }
+
+        await updateHabitIntensity();
     } catch (error) {
         console.error(`Error adding habit ${habit.HABIT_ID} to log:`, error);
+    }
+};
+
+const updateHabitIntensity = async () => {
+    try {
+        const currentDate = new Date().toISOString().split('T')[0];
+        const habitLogs = await client
+            .from('HABIT_LOG')
+            .select('LOG_ID') // Select any field, as we only want to check the number of records
+            .eq('DATE', currentDate);
+
+        console.log('habitLogs:', habitLogs);
+        console.log(`Request URL: ${client.from('HABIT_LOG').select('LOG_ID').eq('DATE', currentDate).url}`);
+
+        // Update habit intensity table
+        await client.from('HABIT_INTENSITY').upsert([
+            {
+                TOTAL: habitLogs.data ? habitLogs.data.length : 0,
+                DATE: currentDate,
+            },
+        ]);
+    } catch (error) {
+        console.error('Error updating habit intensity:', error);
     }
 };
 
