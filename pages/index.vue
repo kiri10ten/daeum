@@ -1,11 +1,18 @@
 <template>
-    <div>
-        <h1>Create New Habit</h1>
-        <label>New habit</label>
-        <input v-model="habitName" type="text">
-        <button @click="addHabit">Add the habit</button>
+    <div class="  flex flex-col p-28 w-full items-center text">
+        
+        <h1 class="  text-xl p-10">Create New Habit</h1>
+        
+        <div class = "flex flex-row gap-5 p-4" >
+            <UTextarea :rows="1"  v-model="habitName" placeholder="New Habit..." />
+             <UButton @click="addHabit"> Add the Habit</UButton>
+         </div>
 
-        <habitlog />
+      <div class="flex flex-row">
+        <habitlog  :updateHabits="fetchHabits" />
+    <habitintense/>
+      </div>
+       
     </div>
 </template>
 
@@ -15,17 +22,24 @@ const client = useSupabaseClient();
 
 
 const addHabit = async () => {
+
+    if (habitName.value != ''){
+        
     try {
         await client.from('HABITS').insert([{ HABIT_NAME: habitName.value }]);
         habitName.value = '';
         alert('Habit added successfully');
 
+        fetchHabits();
         
  
     } catch (error) {
         console.error(error);
     }
-};
-
+    }
+    else {
+        alert("please enter some Habits pwease 🥹")
+    };
+}
 
 </script>

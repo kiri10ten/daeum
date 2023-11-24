@@ -1,23 +1,30 @@
 
 
 <template>
-    <div>
-        <h2>Today's Habits</h2>
+    <div class="p-4 border-2 border-slate-600 ">
+        <h2 class="pb-4">Today's Habits</h2>
         <ul>
-            <li v-for="habit in unloggedHabits" :key="habit.id">
-                <input type="checkbox" v-model="habit.done" />
-                {{ habit.HABIT_NAME }}
+            <li class="" v-for="habit in unloggedHabits" :key="habit.id">
+               
+                <UCheckbox  v-model="habit.done" :model-value="false" >   
+                <template #label> 
+
+                  <span> {{ habit.HABIT_NAME }}</span>
+                </template>
+             </UCheckbox> 
             </li>
+            
         </ul>
 
-        <button @click="addToHabitLog">Add to habit log</button>
-
-        <h1> Total habits logged: {{ totalHabitsLogged }}</h1>
+    <div class="pt-2">
+    <UButton  @click="addToHabitLog"> Add to habit log</UButton>
+    </div>
+       
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+
 
 const client = useSupabaseClient();
 const habits = ref([]);
@@ -52,6 +59,7 @@ const addToHabitLog = async () => {
         for (const habit of habitsToAdd) {
             await addHabitToLog(habit);
         }
+        alert(" You have done it ")
         // Refresh habits after adding to the log
         await fetchHabits();
     } catch (error) {

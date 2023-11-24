@@ -1,7 +1,10 @@
 <template>
-  <div>
+  <div   class=" items-center">
  <NuxtPage/>
  </div>
 </template>
 
+<script>
+
+</script>
 
