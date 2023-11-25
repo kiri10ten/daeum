@@ -2,7 +2,7 @@
 export default defineNuxtConfig({
   
   modules: ['@nuxtjs/supabase','@nuxt/ui'],
-  supabase :{
+ supabase :{
     redirect : false
   },
 })

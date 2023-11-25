@@ -1,4 +1,8 @@
 <template>
+
+     <div class="flex  justify-end  pr-10 pt-4 ">
+     <UButton color="white" @click="logout"> log out </UButton>
+     </div>
     <div class="  flex flex-col p-28 w-full items-center text">
         
         <h1 class="  text-xl p-10">Create New Habit</h1>
@@ -12,6 +16,9 @@
         <habitlog  :updateHabits="fetchHabits" />
     <habitintense/>
       </div>
+
+
+     
        
     </div>
 </template>
@@ -20,14 +27,15 @@
 const habitName = ref('');
 const client = useSupabaseClient();
 
-
+const user = useSupabaseUser()
 const addHabit = async () => {
 
     if (habitName.value != ''){
         
     try {
-        await client.from('HABITS').insert([{ HABIT_NAME: habitName.value }]);
+        await client.from('HABITS').insert([{ HABIT_NAME: habitName.value, USER_ID: user.value.id }]);
         habitName.value = '';
+        console.log(user.value.id)
         alert('Habit added successfully');
 
         fetchHabits();
@@ -40,6 +48,15 @@ const addHabit = async () => {
     else {
         alert("please enter some Habits pwease 🥹")
     };
+
+
+
 }
+const logout = async () => {
+    await client.auth.signOut()
+    navigateTo('/login')
+}
+
+
 
 </script>
