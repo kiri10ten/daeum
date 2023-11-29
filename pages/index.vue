@@ -1,6 +1,7 @@
 <template>
     <div class="flex justify-end pr-10 pt-4">
         <UButton color="white" @click="logout">Log Out</UButton>
+       
     </div>
     <div class="flex flex-col p-28 w-full items-center text">
         <h1 class="text-xl p-10">Create New Habit</h1>
@@ -9,13 +10,15 @@
             <UButton @click="addHabit">Add the Habit</UButton>
         </div>
         <div class="flex flex-row">
-            <habitlog />
+            <habitlog :rerender="rerender"/>
             <habitintense />
         </div>
     </div>
 </template>
 
 <script setup>
+
+const rerender = ref(false);
 const habitName = ref('');
 const client = useSupabaseClient();
 const user = useSupabaseUser();
@@ -27,7 +30,9 @@ const addHabit = async () => {
             await client.from('HABITS').insert([{ HABIT_NAME: trimmedHabitName, USER_ID: user.value.id }]);
             habitName.value = '';
             alert('Habit added successfully');
-            fetchHabits();
+            rerender.value = !rerender.value;
+            
+
         } catch (error) {
             console.error(error);
         }
