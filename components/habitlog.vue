@@ -12,56 +12,53 @@
         </ul>
 
         <div class="pt-2">
-            <UButton @click="addToHabitLogAll">Add all habits to log</UButton>
+            <UButton @click="addToHabitLog">Add to habit log</UButton>
         </div>
     </div>
 </template>
 
 <script setup>
-
 const client = useSupabaseClient();
 const user = useSupabaseUser();
 const habits = ref([]);
 const unloggedHabits = ref([]);
 const totalHabitsLogged = ref(0);
-const props = defineProps({
-    rerender: Boolean,
-});
-const rerenderFlag = ref(props.rerender);
+
 const fetchHabits = async () => {
     try {
         const currentDate = new Date().toISOString().split('T')[0];
-        const allHabitsResponse = await client
+        const response = await client
             .from('HABITS')
             .select('*')
             .eq('USER_ID', user.value.id);
-        const allHabits = allHabitsResponse.data;
-        console.log(props.rerender)
-       
-        const loggedHabitsResponse = await client
+        const allHabits = response.data;
+
+        // Filter out habits that are already logged for the current date
+        const loggedHabits = await client
             .from('HABIT_LOG')
             .select('HABIT_ID')
             .eq('USER_ID', user.value.id)
             .eq('DATE', currentDate);
-        const loggedHabitIds = loggedHabitsResponse.data.map((habit) => habit.HABIT_ID);
+        unloggedHabits.value = allHabits.filter(
+            (habit) => !loggedHabits.data.some((log) => log.HABIT_ID === habit.HABIT_ID)
+        );
 
-       
-        unloggedHabits.value = allHabits.filter((habit) => !loggedHabitIds.includes(habit.HABIT_ID));
-        
-        
-        totalHabitsLogged.value = loggedHabitIds.length;
+        // Recalculate totalHabitsLogged based on the fetched data
+        totalHabitsLogged.value = loggedHabits.data ? loggedHabits.data.length : 0;
     } catch (error) {
         console.error('Error fetching habits:', error);
     }
 };
-const addToHabitLogAll = async () => {
+
+const addToHabitLog = async () => {
     try {
         const habitsToAdd = unloggedHabits.value.filter((habit) => habit.done);
         for (const habit of habitsToAdd) {
             await addHabitToLog(habit);
         }
         alert('You have done it');
-        await fetchHabits(); // Refresh habits after adding to the log
+        // Refresh habits after adding to the log
+        await fetchHabits();
     } catch (error) {
         console.error('Error adding habits to log:', error);
     }
@@ -104,7 +101,8 @@ const updateHabitIntensity = async () => {
     try {
         const currentDate = new Date().toISOString().split('T')[0];
         const habitLogs = await client
-            .from('HABIT_LOG').select('LOG_ID')
+            .from('HABIT_LOG')
+            .select('LOG_ID')
             .eq('USER_ID', user.value.id)
             .eq('DATE', currentDate);
 
@@ -116,6 +114,7 @@ const updateHabitIntensity = async () => {
             .eq('DATE', currentDate);
 
         if (!existingIntensity.data) {
+            console.log('Existing intensity data is null:', existingIntensity);
             // Insert a new intensity entry if it doesn't already exist
             await client.from('HABIT_INTENSITY').upsert([
                 {
@@ -150,9 +149,5 @@ const habitExists = async (habitId) => {
     }
 };
 
-watchEffect(() => {
-    habits.value = props.rerender;
-    fetchHabits();
-});
-
+onMounted(fetchHabits);
 </script>
