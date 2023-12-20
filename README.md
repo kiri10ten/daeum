@@ -1,3 +1,6 @@
+Habit Tracking application using supabase and nuxt js
+
+
 # How to install 
 
 clone the repo and use 
